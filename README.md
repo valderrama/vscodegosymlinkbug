@@ -28,29 +28,52 @@ streetsidesoftware.code-spell-checker@1.6.9
 
 ## Repro Steps
 
-Run the following commands clone the repo, symlink it, and open the project in VS Code:
+Run the following commands clone the repo, symlink it, and open a directory which symlinks to the package in VS Code:
 ```
 cd ~
 mkdir valderrama
 cd valderrama
 git clone git@github.com:valderrama/vscodegosymlinkbug.git
+
 cd $GOPATH/src
 mkdir valderrama
 cd valderrama
 ln -s ~/valderrama/vscodegosymlinkbug vscodegosymlinkbug
-code -n .
+
+code -n $GOPATH/src/valderrama/
 ```
 
-Open vscodegosymlinkbug/main.go
-Wait for ~30s for GO code extension to build project
-You will see the following error appear:
+Then Open vscodegosymlinkbug/main.go. You will need to wait for ~30s for GO code extension to build project then you will see the following error appear:
 ![Bug Screen Shot](https://raw.githubusercontent.com/valderrama/vscodegosymlinkbug/master/bug_screen_shot.png)
 
-However if you run the following commands:
+If you run the following commands to build the package following the symlink it will be successful:
 ```
 cd $GOPATH/src/valderrama/vscodegosymlinkbug
 go build
 ```
 
-The package will build successfully
+Ex.
+```
+$> cd $GOPATH/src/valderrama/vscodegosymlinkbug
+$> go build
+$> 
+```
 
+If you run the following commands to build the package from the source directory it will not be successful with the same error given by VS Code:
+```
+cd ~/valderrama/vscodegosymlinkbug
+go build
+```
+
+Ex.
+```
+$> cd ~/valderrama/vscodegosymlinkbug
+$> go build
+# _/Users/alex/valderrama/vscodegosymlinkbug
+./main.go:19:20: cannot use connection (type *"github.com/hyperledger/fabric/vendor/google.golang.org/grpc".ClientConn) as type *"google.golang.org/grpc".ClientConn in assignment
+$>
+```
+
+## Expected Behavior
+
+When VS Code opens a project directory in the $GOPATH with symlinks to directories outside the $GOPATH it should build code as if it were accessing the directories from the project directory not as if it were in the symlink target directory.
